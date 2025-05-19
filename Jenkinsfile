@@ -17,12 +17,14 @@ pipeline {
 
         stage('Test') {
             steps {
+                git 'https://github.com/ramizshaikh8/python-app-with-docker.git'
                 echo 'No tests defined — skipping for now.'
             }
         }
 
         stage('Build Docker Image') {
             steps {
+                git 'https://github.com/ramizshaikh8/python-app-with-docker.git'
                 sh '''
                     docker build -t $IMAGE_NAME .
                     docker image ls | grep $IMAGE_NAME
