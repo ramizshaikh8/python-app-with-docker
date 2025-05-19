@@ -23,16 +23,20 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                git 'https://github.com/ramizshaikh8/python-app-with-docker.git'
-                sh 'docker build -t $IMAGE_NAME .'
+                sh '''
+                    docker build -t $IMAGE_NAME .
+                    docker image ls | grep $IMAGE_NAME
+                '''
             }
         }
 
         stage('Deploy Docker Container') {
             steps {
                 sh '''
+                    echo "[INFO] Stopping and removing existing container..."
                     docker rm -f $CONTAINER_NAME || true
                     sleep 2
+                    echo "[INFO] Running new container..."
                     docker run -d --name $CONTAINER_NAME -p $HOST_PORT:$CONTAINER_PORT $IMAGE_NAME
                 '''
             }
@@ -43,10 +47,14 @@ pipeline {
                 sh '''
                     echo "[INFO] Checking if container is running..."
                     docker ps | grep $CONTAINER_NAME || echo "Container failed to start"
+
+                    echo "[INFO] Attempting curl check (if applicable)..."
+                    curl -s http://localhost:$HOST_PORT || echo "No response from app"
                 '''
             }
         }
     }
+
     post {
         success {
             echo '✅ All stages completed.'
