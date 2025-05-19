@@ -23,6 +23,7 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
+                git 'https://github.com/ramizshaikh8/python-app-with-docker.git'
                 sh 'docker build -t $IMAGE_NAME .'
             }
         }
@@ -45,7 +46,7 @@ pipeline {
                 '''
             }
         }
-
+    }
     post {
         success {
             echo '✅ All stages completed.'
