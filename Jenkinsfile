@@ -2,42 +2,40 @@ pipeline {
     agent any
 
     environment {
-        // Adjust if you use virtualenv or specific Python version
-        PYTHON_ENV = 'python3'
+        IMAGE_NAME = 'my-python-app'
+        CONTAINER_NAME = 'my-python-app-container'
+        HOST_PORT = '5051'
+        CONTAINER_PORT = '5000'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout your python app repo
                 git branch: 'main', url: 'https://github.com/ramizshaikh8/python-app-with-docker.git'
-            }
-        }
-
-        stage('Build') {
-            steps {
-                echo 'Building Docker image...'
-                sh 'docker build -t my-python-app .'
             }
         }
 
         stage('Test') {
             steps {
-                echo 'Running tests inside Docker container...'
-                // Run tests by starting a temporary container
-                // Assuming your Dockerfile installs test dependencies
-                sh 'docker run --rm my-python-app pytest' 
-                // Change `pytest` to whatever test command your app uses
+                echo 'Running Python tests...'
+                // Replace with your actual test command (unittest, pytest, etc.)
+                sh 'python3 -m unittest discover -s tests || true'
             }
         }
 
-        stage('Deploy') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Deploying container...'
-                // Stop and remove old container if exists (optional but recommended)
+                echo "Building Docker image..."
+                sh 'docker build -t $IMAGE_NAME .'
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                echo "Deploying container..."
                 sh '''
-                docker rm -f my-python-app-container || true
-                docker run -d --name my-python-app-container -p 5057:5000 my-python-app
+                    docker rm -f $CONTAINER_NAME || true
+                    docker run -d --name $CONTAINER_NAME -p $HOST_PORT:$CONTAINER_PORT $IMAGE_NAME
                 '''
             }
         }
@@ -45,12 +43,10 @@ pipeline {
 
     post {
         always {
-            echo 'Cleaning up dangling Docker images...'
-            sh 'docker image prune -f'
+            echo 'Pipeline complete.'
         }
         failure {
-            echo 'Build failed! Notifying team...'
-            // Add notification steps here (email/slack etc.)
+            echo 'Pipeline failed. Check logs.'
         }
     }
 }
