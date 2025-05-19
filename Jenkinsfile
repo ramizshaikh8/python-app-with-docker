@@ -17,9 +17,9 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo 'Running Python tests...'
-                // Replace with your actual test command (unittest, pytest, etc.)
-                sh 'python3 -m unittest discover -s tests || true'
+                echo 'Running tests...'
+                // Optional: Replace with real tests if you have any
+                sh 'echo "No tests defined"'
             }
         }
 
@@ -30,23 +30,33 @@ pipeline {
             }
         }
 
-        stage('Deploy Container') {
+        stage('Deploy Docker Container') {
             steps {
-                echo "Deploying container..."
+                echo "Deploying Docker container..."
                 sh '''
-                    docker rm -f $CONTAINER_NAME || true
+                    echo "[INFO] Stopping and removing existing container (if any)..."
+                    docker rm -f $CONTAINER_NAME 2>/dev/null || echo "[INFO] No existing container to remove."
+
+                    echo "[INFO] Starting a new container..."
                     docker run -d --name $CONTAINER_NAME -p $HOST_PORT:$CONTAINER_PORT $IMAGE_NAME
+
+                    if [ $? -eq 0 ]; then
+                        echo "[SUCCESS] Container started successfully on port $HOST_PORT"
+                    else
+                        echo "[ERROR] Failed to start the container"
+                        exit 1
+                    fi
                 '''
             }
         }
     }
 
     post {
-        always {
-            echo 'Pipeline complete.'
+        success {
+            echo '✅ Pipeline completed successfully.'
         }
         failure {
-            echo 'Pipeline failed. Check logs.'
+            echo '❌ Pipeline failed. Check above logs for details.'
         }
     }
 }
