@@ -37,7 +37,7 @@ pipeline {
                 // Stop and remove old container if exists (optional but recommended)
                 sh '''
                 docker rm -f my-python-app-container || true
-                docker run -d --name my-python-app-container -p 5056:5000 my-python-app
+                docker run -d --name my-python-app-container -p 5057:5000 my-python-app
                 '''
             }
         }
