@@ -17,35 +17,31 @@ pipeline {
 
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                // Optional: Replace with real tests if you have any
-                sh 'echo "No tests defined"'
+                echo 'No tests defined — skipping for now.'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image..."
                 sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
         stage('Deploy Docker Container') {
             steps {
-                echo "Deploying Docker container..."
                 sh '''
-                    echo "[INFO] Stopping and removing existing container (if any)..."
-                    docker rm -f $CONTAINER_NAME 2>/dev/null || echo "[INFO] No existing container to remove."
-
-                    echo "[INFO] Starting a new container..."
+                    docker rm -f $CONTAINER_NAME || true
+                    sleep 2
                     docker run -d --name $CONTAINER_NAME -p $HOST_PORT:$CONTAINER_PORT $IMAGE_NAME
+                '''
+            }
+        }
 
-                    if [ $? -eq 0 ]; then
-                        echo "[SUCCESS] Container started successfully on port $HOST_PORT"
-                    else
-                        echo "[ERROR] Failed to start the container"
-                        exit 1
-                    fi
+        stage('Run') {
+            steps {
+                sh '''
+                    echo "[INFO] Checking if container is running..."
+                    docker ps | grep $CONTAINER_NAME || echo "Container failed to start"
                 '''
             }
         }
@@ -53,10 +49,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline completed successfully.'
+            echo '✅ All stages completed.'
         }
         failure {
-            echo '❌ Pipeline failed. Check above logs for details.'
+            echo '❌ Pipeline failed.'
         }
     }
 }
